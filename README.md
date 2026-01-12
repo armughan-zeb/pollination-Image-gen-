@@ -1,34 +1,60 @@
-# Pollination Image Generator 🎨
+<!-- Project Logo -->
+<p align="center">
+  <img src="https://image.pollinations.ai/prompt/AI%20art%20generator%20logo%20minimalist%20colorful?width=200&height=200&nologo=true" alt="Logo" width="120" height="120">
+</p>
 
-A modern, sleek AI image generation tool powered by [Pollinations AI](https://pollinations.ai/) API.
+<h1 align="center">Pollination Image Generator</h1>
 
-## Features
+<p align="center">
+  <strong>🎨 Create stunning AI images with just a prompt</strong>
+</p>
 
-- 🖼️ **Multiple Models**: Support for Flux and Turbo models
-- 📐 **Custom Dimensions**: Choose from various image sizes
-- ⬇️ **Download Images**: Save generated images directly
-- 📋 **Copy URL**: Quick copy image URLs to clipboard
-- 🎨 **Modern UI**: Beautiful, responsive dark-themed interface
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#demo">Demo</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#contributing">Contributing</a>
+</p>
 
-## Usage
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/version-1.0.0-green.svg" alt="Version">
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
+</p>
 
-1. Enter your prompt describing the image you want
-2. Select an AI model (Flux or Turbo)
-3. Choose your preferred image dimensions
-4. Click "Generate Image"
-5. Download or copy the URL of your generated image
+---
 
-## Technologies
+## ✨ Features
 
-- HTML5
-- CSS3 (with modern animations and glassmorphism)
-- Vanilla JavaScript
-- Pollinations AI API
+- 🖼️ **Multiple AI Models** - Choose between Flux and Turbo
+- 📐 **Custom Dimensions** - Various size presets available
+- ⬇️ **Easy Downloads** - One-click image saving
+- 📋 **Quick Copy** - Copy image URLs instantly
+- 🎨 **Modern UI** - Beautiful dark theme with glassmorphism
 
-## Live Demo
+## 🚀 Quick Start
 
-Simply open `index.html` in your browser to start generating images!
+```bash
+# Clone the repository
+git clone https://github.com/armughan-zeb/pollination-Image-gen-.git
 
-## License
+# Open index.html in your browser
+# That's it! No installation required.
+```
 
-MIT License - feel free to use and modify as needed.
+## 📖 Documentation
+
+- [Getting Started](docs/GETTING_STARTED.md)
+- [API Reference](docs/API.md)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) first.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">Made with ❤️ by Armughan</p>
