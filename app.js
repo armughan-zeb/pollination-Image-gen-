@@ -20,6 +20,13 @@ const toggleKeyBtn = document.getElementById('toggle-key-btn');
 const eyeOpen = toggleKeyBtn.querySelector('.eye-open');
 const eyeClosed = toggleKeyBtn.querySelector('.eye-closed');
 
+// Advanced Settings Elements
+const negativePromptInput = document.getElementById('negative-prompt');
+const seedInput = document.getElementById('seed-input');
+const randomSeedBtn = document.getElementById('random-seed-btn');
+const enhanceToggle = document.getElementById('enhance-toggle');
+const safeToggle = document.getElementById('safe-toggle');
+
 // ===== State =====
 let currentImageUrl = null;
 let isGenerating = false;
@@ -161,6 +168,10 @@ async function generateImage() {
     const model = modelSelect.value;
     const size = sizeSelect.value;
     const [width, height] = size.split('x').map(Number);
+    const negativePrompt = negativePromptInput.value.trim();
+    const seed = seedInput.value || Math.floor(Math.random() * 1000000); // Default random if empty
+    const enhance = enhanceToggle.checked;
+    const safe = safeToggle.checked;
 
     setLoading(true);
     setActionButtonsEnabled(false);
@@ -171,10 +182,26 @@ async function generateImage() {
     imageInfo.style.display = 'none';
 
     try {
+        const encodedPrompt = encodeURIComponent(prompt);
+        let url;
+
         if (apiKey) {
             // Paid API Generation
-            const encodedPrompt = encodeURIComponent(prompt);
-            const url = `${PAID_BASE_URL}/${encodedPrompt}?model=${model}&width=${width}&height=${height}&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
+            const params = new URLSearchParams({
+                model: model,
+                width: width,
+                height: height,
+                seed: seed,
+                nologo: 'true',
+                enhance: enhance,
+                safe: safe
+            });
+
+            if (negativePrompt) {
+                params.append('negative_prompt', negativePrompt);
+            }
+
+            url = `${PAID_BASE_URL}/${encodedPrompt}?${params.toString()}`;
 
             const response = await fetch(url, {
                 method: 'GET',
@@ -187,7 +214,8 @@ async function generateImage() {
                 if (response.status === 401) {
                     throw new Error('Invalid API Key');
                 }
-                throw new Error('Generation failed');
+                const errorText = await response.text();
+                throw new Error(errorText || 'Generation failed');
             }
 
             const blob = await response.blob();
@@ -195,24 +223,31 @@ async function generateImage() {
 
         } else {
             // Free API Generation
-            const encodedPrompt = encodeURIComponent(prompt);
             const params = new URLSearchParams({
                 model: model,
                 width: width,
                 height: height,
-                seed: Math.floor(Math.random() * 1000000),
-                nologo: 'true'
+                seed: seed,
+                nologo: 'true',
+                safe: safe
+                // enhance is usually paid-only, but strict params don't hurt
             });
 
-            currentImageUrl = `${FREE_BASE_URL}/${encodedPrompt}?${params.toString()}`;
+            if (negativePrompt) {
+                params.append('negative_prompt', negativePrompt);
+            }
 
-            // Preload image
-            await new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = resolve;
-                img.onerror = () => reject(new Error('Failed to load image'));
-                img.src = currentImageUrl;
-            });
+            // Using fetch for free API too to ensure we can handle errors and loading better
+            url = `${FREE_BASE_URL}/${encodedPrompt}?${params.toString()}`;
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Generation failed: ${response.statusText}`);
+            }
+
+            const blob = await response.blob();
+            currentImageUrl = URL.createObjectURL(blob);
         }
 
         // Update the displayed image
@@ -257,8 +292,7 @@ async function downloadImage() {
     try {
         showToast('Preparing download...');
 
-        // For blob URLs (paid API), we already have the blob, but fetching works too
-        // For regular URLs (free API), we need to fetch
+        // Use the blob URL properly
         const response = await fetch(currentImageUrl);
         const blob = await response.blob();
 
@@ -272,7 +306,7 @@ async function downloadImage() {
         link.click();
         document.body.removeChild(link);
 
-        // Only revoke if we created a new object URL here (not the global one)
+        // Clean up
         URL.revokeObjectURL(link.href);
 
         showToast('Image downloaded! 📥');
@@ -290,18 +324,30 @@ async function copyImageUrl() {
     if (!currentImageUrl) return;
 
     try {
-        // If it's a blob URL, we can't really "copy URL" meaningfully for others
-        // But for free API it works. 
-        if (currentImageUrl.startsWith('blob:')) {
-            showToast('Cannot copy blob URL. Please download image.');
-            return;
+        // Since we are using blob URLs now, we can't really copy a public link easily
+        // unless we revert to simple string URLs for the free API.
+        // But for consistency and better error handling (fetch blobing), let's keep blobs.
+
+        // We can however try to write the image data to clipboard
+        const response = await fetch(currentImageUrl);
+        const blob = await response.blob();
+
+        try {
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    [blob.type]: blob
+                })
+            ]);
+            showToast('Image copied to clipboard! 📋');
+        } catch (err) {
+            // Fallback: If write permission is denied or not supported
+            showToast('Use "Download" button to save image');
+            console.warn('Clipboard write failed', err);
         }
 
-        await navigator.clipboard.writeText(currentImageUrl);
-        showToast('URL copied to clipboard! 📋');
     } catch (error) {
         console.error('Copy error:', error);
-        showToast('Failed to copy URL');
+        showToast('Failed to copy image');
     }
 }
 
@@ -310,6 +356,11 @@ async function copyImageUrl() {
 generateBtn.addEventListener('click', generateImage);
 downloadBtn.addEventListener('click', downloadImage);
 copyUrlBtn.addEventListener('click', copyImageUrl);
+
+// Random Seed
+randomSeedBtn.addEventListener('click', () => {
+    seedInput.value = Math.floor(Math.random() * 1000000);
+});
 
 // Generate on Enter key (with Ctrl/Cmd for textarea)
 promptInput.addEventListener('keydown', (e) => {

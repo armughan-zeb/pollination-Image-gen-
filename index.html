@@ -128,6 +128,73 @@
                         </div>
                     </div>
 
+                    <details class="advanced-settings">
+                        <summary>
+                            <span class="summary-content">
+                                <span class="label-icon">⚙️</span>
+                                Advanced Settings
+                            </span>
+                            <svg class="chevron" viewBox="0 0 24 24" fill="none">
+                                <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </summary>
+
+                        <div class="settings-grid">
+                            <div class="input-group full-width">
+                                <label for="negative-prompt">
+                                    <span class="label-icon">🚫</span>
+                                    Negative Prompt
+                                </label>
+                                <input type="text" id="negative-prompt"
+                                    placeholder="What to avoid (e.g. blurry, bad quality, distortion)">
+                            </div>
+
+                            <div class="input-group">
+                                <label for="seed-input">
+                                    <span class="label-icon">🎲</span>
+                                    Seed
+                                </label>
+                                <div class="seed-wrapper">
+                                    <input type="number" id="seed-input" placeholder="Random" min="-1">
+                                    <button id="random-seed-btn" class="icon-btn" title="Randomize Seed">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8c0 2.025.753 3.872 2 5.287"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                            <path d="M4 10c0 4.418 3.582 8 8 8 2.025 0 3.872-.753 5.287-2"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                            <path d="M21 15l-3.5-3.5" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M3 5l3.5 3.5" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="toggles-group">
+                                <div class="toggle-item">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="enhance-toggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="toggle-label">
+                                        Enhance Prompt
+                                        <span class="badge-premium">Paid</span>
+                                    </span>
+                                </div>
+
+                                <div class="toggle-item">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="safe-toggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="toggle-label">Safe Mode</span>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
                     <button id="generate-btn" class="generate-btn">
                         <span class="btn-content">
                             <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
