@@ -1,0 +1,28 @@
+{
+  "name": "pollination-image-gen",
+  "version": "1.0.0",
+  "description": "AI Image Generator powered by Pollinations AI API",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx live-server --port=3000"
+  },
+  "keywords": [
+    "ai",
+    "image-generation",
+    "pollinations",
+    "flux",
+    "turbo",
+    "javascript"
+  ],
+  "author": "Armughan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/armughan-zeb/pollination-Image-gen-.git"
+  },
+  "bugs": {
+    "url": "https://github.com/armughan-zeb/pollination-Image-gen-/issues"
+  },
+  "homepage": "https://github.com/armughan-zeb/pollination-Image-gen-#readme"
+}
