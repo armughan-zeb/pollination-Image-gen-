@@ -14,40 +14,95 @@ const infoTime = document.getElementById('info-time');
 const toast = document.getElementById('toast');
 const toastMessage = document.getElementById('toast-message');
 
+// API Key Elements
+const apiKeyInput = document.getElementById('api-key-input');
+const toggleKeyBtn = document.getElementById('toggle-key-btn');
+const eyeOpen = toggleKeyBtn.querySelector('.eye-open');
+const eyeClosed = toggleKeyBtn.querySelector('.eye-closed');
+
 // ===== State =====
 let currentImageUrl = null;
 let isGenerating = false;
+let apiKey = localStorage.getItem('pollinations_api_key') || '';
 
-// ===== Pollinations API Configuration =====
-const POLLINATIONS_BASE_URL = 'https://image.pollinations.ai/prompt';
+// ===== Configuration =====
+const FREE_BASE_URL = 'https://image.pollinations.ai/prompt';
+const PAID_BASE_URL = 'https://gen.pollinations.ai/image';
 
-// Model mapping
-const MODELS = {
-    'flux': 'flux',
-    'turbo': 'turbo'
+// Models
+const FREE_MODELS = {
+    'flux': 'Flux (High Quality)',
+    'turbo': 'Turbo (Fast)'
+};
+
+const PAID_MODELS = {
+    'flux': 'Flux (High Quality)',
+    'turbo': 'Turbo (Fast)',
+    'gptimage': 'GPT Image (Reasoning)',
+    'kontext': 'Kontext',
+    'seedream': 'Seedream',
+    'nanobanana': 'NanoBanana'
 };
 
 // ===== Functions =====
 
 /**
- * Generate the Pollinations API URL
+ * Initialize API Key state
  */
-function buildImageUrl(prompt, model, size) {
-    const [width, height] = size.split('x').map(Number);
+function initApiKey() {
+    if (apiKey) {
+        apiKeyInput.value = apiKey;
+        updateModelOptions();
+    }
 
-    // Encode the prompt for URL
-    const encodedPrompt = encodeURIComponent(prompt);
+    // Toggle Visibility
+    toggleKeyBtn.addEventListener('click', () => {
+        const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        apiKeyInput.setAttribute('type', type);
 
-    // Build URL with parameters
-    const params = new URLSearchParams({
-        model: MODELS[model] || 'flux',
-        width: width,
-        height: height,
-        seed: Math.floor(Math.random() * 1000000), // Random seed for variety
-        nologo: 'true'
+        if (type === 'text') {
+            eyeOpen.style.display = 'none';
+            eyeClosed.style.display = 'block';
+        } else {
+            eyeOpen.style.display = 'block';
+            eyeClosed.style.display = 'none';
+        }
     });
 
-    return `${POLLINATIONS_BASE_URL}/${encodedPrompt}?${params.toString()}`;
+    // Save on Input
+    apiKeyInput.addEventListener('input', (e) => {
+        apiKey = e.target.value.trim();
+        if (apiKey) {
+            localStorage.setItem('pollinations_api_key', apiKey);
+        } else {
+            localStorage.removeItem('pollinations_api_key');
+        }
+        updateModelOptions();
+    });
+}
+
+/**
+ * Update model dropdown based on API key presence
+ */
+function updateModelOptions() {
+    const currentModel = modelSelect.value;
+    const models = apiKey ? PAID_MODELS : FREE_MODELS;
+
+    modelSelect.innerHTML = '';
+
+    Object.entries(models).forEach(([value, label]) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        modelSelect.appendChild(option);
+    });
+
+    // Restore selection if valid, otherwise default to flux
+    if (models[currentModel]) {
+        modelSelect.value = currentModel;
+    } else {
+        modelSelect.value = 'flux';
+    }
 }
 
 /**
@@ -72,17 +127,6 @@ function formatTime() {
         minute: '2-digit',
         second: '2-digit'
     });
-}
-
-/**
- * Get model display name
- */
-function getModelDisplayName(model) {
-    const names = {
-        'flux': 'Flux (High Quality)',
-        'turbo': 'Turbo (Fast)'
-    };
-    return names[model] || model;
 }
 
 /**
@@ -116,6 +160,7 @@ async function generateImage() {
 
     const model = modelSelect.value;
     const size = sizeSelect.value;
+    const [width, height] = size.split('x').map(Number);
 
     setLoading(true);
     setActionButtonsEnabled(false);
@@ -126,17 +171,49 @@ async function generateImage() {
     imageInfo.style.display = 'none';
 
     try {
-        // Build the image URL
-        currentImageUrl = buildImageUrl(prompt, model, size);
+        if (apiKey) {
+            // Paid API Generation
+            const encodedPrompt = encodeURIComponent(prompt);
+            const url = `${PAID_BASE_URL}/${encodedPrompt}?model=${model}&width=${width}&height=${height}&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
 
-        // Create a new image to preload
-        const img = new Image();
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`
+                }
+            });
 
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = () => reject(new Error('Failed to generate image'));
-            img.src = currentImageUrl;
-        });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Invalid API Key');
+                }
+                throw new Error('Generation failed');
+            }
+
+            const blob = await response.blob();
+            currentImageUrl = URL.createObjectURL(blob);
+
+        } else {
+            // Free API Generation
+            const encodedPrompt = encodeURIComponent(prompt);
+            const params = new URLSearchParams({
+                model: model,
+                width: width,
+                height: height,
+                seed: Math.floor(Math.random() * 1000000),
+                nologo: 'true'
+            });
+
+            currentImageUrl = `${FREE_BASE_URL}/${encodedPrompt}?${params.toString()}`;
+
+            // Preload image
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = () => reject(new Error('Failed to load image'));
+                img.src = currentImageUrl;
+            });
+        }
 
         // Update the displayed image
         generatedImage.src = currentImageUrl;
@@ -144,7 +221,7 @@ async function generateImage() {
         placeholder.style.display = 'none';
 
         // Update image info
-        infoModel.textContent = getModelDisplayName(model);
+        infoModel.textContent = (apiKey ? PAID_MODELS : FREE_MODELS)[model];
         infoSize.textContent = size.replace('x', ' × ');
         infoTime.textContent = formatTime();
         imageInfo.style.display = 'grid';
@@ -156,7 +233,7 @@ async function generateImage() {
 
     } catch (error) {
         console.error('Generation error:', error);
-        showToast('Failed to generate image. Please try again.');
+        showToast(error.message || 'Failed to generate image. Please try again.');
         placeholder.innerHTML = `
             <div class="placeholder-icon">
                 <svg viewBox="0 0 24 24" fill="none">
@@ -164,7 +241,7 @@ async function generateImage() {
                     <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
             </div>
-            <p>Generation failed. Please try again.</p>
+            <p>Generation failed. ${error.message || 'Please try again.'}</p>
         `;
     } finally {
         setLoading(false);
@@ -180,7 +257,8 @@ async function downloadImage() {
     try {
         showToast('Preparing download...');
 
-        // Fetch the image as blob
+        // For blob URLs (paid API), we already have the blob, but fetching works too
+        // For regular URLs (free API), we need to fetch
         const response = await fetch(currentImageUrl);
         const blob = await response.blob();
 
@@ -194,7 +272,7 @@ async function downloadImage() {
         link.click();
         document.body.removeChild(link);
 
-        // Clean up
+        // Only revoke if we created a new object URL here (not the global one)
         URL.revokeObjectURL(link.href);
 
         showToast('Image downloaded! 📥');
@@ -212,6 +290,13 @@ async function copyImageUrl() {
     if (!currentImageUrl) return;
 
     try {
+        // If it's a blob URL, we can't really "copy URL" meaningfully for others
+        // But for free API it works. 
+        if (currentImageUrl.startsWith('blob:')) {
+            showToast('Cannot copy blob URL. Please download image.');
+            return;
+        }
+
         await navigator.clipboard.writeText(currentImageUrl);
         showToast('URL copied to clipboard! 📋');
     } catch (error) {
@@ -223,9 +308,7 @@ async function copyImageUrl() {
 // ===== Event Listeners =====
 
 generateBtn.addEventListener('click', generateImage);
-
 downloadBtn.addEventListener('click', downloadImage);
-
 copyUrlBtn.addEventListener('click', copyImageUrl);
 
 // Generate on Enter key (with Ctrl/Cmd for textarea)
@@ -238,7 +321,7 @@ promptInput.addEventListener('keydown', (e) => {
 
 // ===== Initialize =====
 document.addEventListener('DOMContentLoaded', () => {
-    // Focus on prompt input
+    initApiKey();
     promptInput.focus();
 
     // Add subtle animation to generate button on hover
