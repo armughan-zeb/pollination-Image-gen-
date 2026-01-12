@@ -39,12 +39,12 @@ const PAID_BASE_URL = 'https://gen.pollinations.ai/image';
 // Models
 const FREE_MODELS = {
     'flux': 'Flux (High Quality)',
-    'turbo': 'Turbo (Fast)'
+    'turbo': 'SDXL Turbo (Fast)'
 };
 
 const PAID_MODELS = {
     'flux': 'Flux (High Quality)',
-    'turbo': 'Turbo (Fast)',
+    'turbo': 'SDXL Turbo (Fast)',
     'gptimage': 'GPT Image (Reasoning)',
     'kontext': 'Kontext',
     'seedream': 'Seedream',
